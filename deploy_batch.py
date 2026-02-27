@@ -81,7 +81,7 @@ def main():
     manifest = []  # app_name → token mapping for collect_mahsa.py
 
     for i in range(args.start, args.start + args.count):
-        app_name = f"mahsa-donor-{i:04d}"
+        app_name = f"mahsadonor{i:04d}"
         sub_token = secrets.token_urlsafe(32)
         spec = make_flux_spec(app_name, args.image, args.configs, sub_token)
         specs.append(spec)
