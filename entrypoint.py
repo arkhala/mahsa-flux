@@ -90,7 +90,7 @@ def write_xray_config(clients, private_key, short_id):
     reality = inbound["streamSettings"]["realitySettings"]
     reality["privateKey"] = private_key
     reality["shortIds"] = [short_id]
-    reality["serverNames"] = list({s for s in DECOY_SNIS})
+    reality["serverNames"] = DECOY_SNIS[:]
     with open("/xray_config.json", "w") as f:
         json.dump(config, f, indent=2)
 

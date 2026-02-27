@@ -119,7 +119,7 @@ def main():
         )
     else:
         json.dump(result, sys.stdout, indent=2)
-        print(file=sys.stdout)  # trailing newline
+        print(file=sys.stdout)
 
     print(
         f"📋 {args.count} nodes: "

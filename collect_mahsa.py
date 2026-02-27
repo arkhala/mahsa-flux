@@ -33,7 +33,7 @@ async def fetch_sub(session, entry, timeout):
                 body = await resp.text()
                 try:
                     decoded = b64decode(body).decode()
-                except Exception:
+                except (ValueError, UnicodeDecodeError):
                     decoded = body
                 links = [l.strip() for l in decoded.splitlines() if l.strip()]
                 print(f"  ✅ {name}: {len(links)} configs", file=sys.stderr)
