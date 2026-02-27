@@ -87,6 +87,7 @@ def write_xray_config(clients, private_key, short_id):
     with open("/xray_template.json") as f:
         config = json.load(f)
     inbound = config["inbounds"][0]
+    inbound["listen"] = "127.0.0.1"
     inbound["port"] = XRAY_INTERNAL_PORT
     inbound["settings"]["clients"] = clients
     reality = inbound["streamSettings"]["realitySettings"]

@@ -40,7 +40,7 @@ async def pipe(reader, writer):
 async def handle(client_reader, client_writer):
     """Peek at the first byte and route to the appropriate backend."""
     try:
-        header = await asyncio.wait_for(client_reader.read(1), timeout=5)
+        header = await asyncio.wait_for(client_reader.read(1), timeout=2)
     except (asyncio.TimeoutError, ConnectionResetError):
         client_writer.close()
         return
