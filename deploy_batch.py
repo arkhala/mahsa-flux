@@ -41,14 +41,14 @@ def make_flux_spec(app_name, image, num_configs, sub_token):
                 ],
                 "commands": [],
                 "containerPorts": [443, 8080],
-                "containerData": "",
+                "containerData": "/tmp",
                 "cpu": 0.7,
                 "ram": 300,
                 "hdd": 1,
                 "tiered": False,
             }
         ],
-        "instances": 1,
+        "instances": 3,
     }
 
 
