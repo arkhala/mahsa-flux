@@ -32,7 +32,7 @@ def make_flux_spec(app_name, image, num_configs, sub_token):
                 "name": app_name,
                 "description": f"VLESS Reality proxy — {num_configs} configs",
                 "repotag": image,
-                "ports": ["443:443", "8080:8080"],
+                "ports": [443, 8080],
                 "domains": [],
                 "environmentParameters": [
                     f"NUM_CONFIGS={num_configs}",
@@ -42,7 +42,7 @@ def make_flux_spec(app_name, image, num_configs, sub_token):
                 "commands": [],
                 "containerPorts": [443, 8080],
                 "containerData": "",
-                "cpu": 0.5,
+                "cpu": 0.7,
                 "ram": 300,
                 "hdd": 1,
                 "tiered": False,
