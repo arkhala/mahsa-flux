@@ -1,14 +1,37 @@
-from flask import Flask, send_file, request
+"""Token-protected subscription server for Mahsa proxy configs."""
+
 import os
 
+from flask import Flask, Response, request
+
 app = Flask(__name__)
-TOKEN = os.getenv("SUB_TOKEN")
+TOKEN = None  # Resolved lazily so ENV set by entrypoint is picked up
 
-@app.route('/sub')
+
+def _get_token():
+    global TOKEN
+    if TOKEN is None:
+        TOKEN = os.getenv("SUB_TOKEN", "")
+    return TOKEN
+
+
+@app.route("/sub")
 def sub():
-    if not TOKEN or request.args.get('token') != TOKEN:
-        return "Access denied", 403
-    return send_file('/sub_content.txt', mimetype='text/plain')
+    token = _get_token()
+    if not token or request.args.get("token") != token:
+        return Response("Access denied", status=403)
+    try:
+        with open("/sub_content.txt") as f:
+            content = f.read()
+    except FileNotFoundError:
+        return Response("Subscription not ready", status=503)
+    return Response(content, mimetype="text/plain")
 
-if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=8080)
+
+@app.route("/health")
+def health():
+    return Response("ok", mimetype="text/plain")
+
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=8080)
