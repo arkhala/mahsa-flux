@@ -20,8 +20,17 @@ import secrets
 import sys
 
 
-def make_flux_spec(app_name, image, num_configs, sub_token):
-    """Return a Flux compose-style v8 spec for a single node."""
+MIN_INSTANCES = 3
+MAX_INSTANCES = 100
+
+
+def make_flux_spec(app_name, image, num_configs, sub_token, instances=MIN_INSTANCES):
+    """Return a Flux compose-style v8 spec for a single node.
+
+    Each of the *instances* replicas independently generates its own
+    Reality keys and *num_configs* client UUIDs at container start, so
+    every replica contributes unique proxy configurations.
+    """
     return {
         "version": 8,
         "name": app_name,
@@ -48,7 +57,7 @@ def make_flux_spec(app_name, image, num_configs, sub_token):
                 "tiered": False,
             }
         ],
-        "instances": 3,
+        "instances": instances,
     }
 
 
@@ -71,11 +80,25 @@ def main():
         "--configs", type=int, default=8, help="NUM_CONFIGS per node (default: 8)"
     )
     parser.add_argument(
+        "--instances",
+        type=int,
+        default=MIN_INSTANCES,
+        help=(
+            f"Replicas per app (default: {MIN_INSTANCES}, "
+            f"min: {MIN_INSTANCES}, max: {MAX_INSTANCES})"
+        ),
+    )
+    parser.add_argument(
         "--output",
         default=None,
         help="Output file for specs JSON (default: stdout)",
     )
     args = parser.parse_args()
+
+    if not (MIN_INSTANCES <= args.instances <= MAX_INSTANCES):
+        parser.error(
+            f"--instances must be between {MIN_INSTANCES} and {MAX_INSTANCES}"
+        )
 
     specs = []
     manifest = []  # app_name → token mapping for collect_mahsa.py
@@ -83,7 +106,9 @@ def main():
     for i in range(args.start, args.start + args.count):
         app_name = f"mahsadonor{i:04d}"
         sub_token = secrets.token_urlsafe(32)
-        spec = make_flux_spec(app_name, args.image, args.configs, sub_token)
+        spec = make_flux_spec(
+            app_name, args.image, args.configs, sub_token, args.instances
+        )
         specs.append(spec)
         manifest.append(
             {
