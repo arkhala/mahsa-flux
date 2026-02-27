@@ -136,7 +136,8 @@ def main():
     os.environ["SUB_TOKEN"] = SUB_TOKEN
     os.environ["SUB_INTERNAL_PORT"] = str(SUB_INTERNAL_PORT)
 
-    print(f"✅ Generated {NUM_CONFIGS} configs for {host}")
+    print(f"✅ Generated {NUM_CONFIGS} independent configs for {host}")
+    print(f"   (each instance generates its own keys and UUIDs)")
     print(f"📋 Sub URL: http://{host}:{LISTEN_PORT}/sub?token={SUB_TOKEN}")
 
     start_xray()

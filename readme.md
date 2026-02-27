@@ -6,6 +6,17 @@ of Iranians to bypass internet censorship.
 
 ## Architecture
 
+Each Flux Cloud app is deployed with multiple **instances** (replicas).  Every
+instance independently generates its own Reality keys and client UUIDs at
+container start, so each replica contributes unique proxy configurations.
+
+- **Minimum instances per app:** 3
+- **Maximum instances per app:** 100
+- **Default configs per instance:** 8 (tunable via `NUM_CONFIGS`)
+
+A single app with 3 instances and 8 configs each produces **24 unique proxy
+configs**.  Scaling to 100 instances yields up to **800 configs per app**.
+
 Each Flux Cloud node runs a single Docker container that:
 
 1. Generates **x25519 Reality keys** and a configurable number of client UUIDs
@@ -46,7 +57,11 @@ docker push ghcr.io/<owner>/flux-mahsa-multi-reality:latest
 ### Generate Flux deployment specs
 
 ```bash
+# 50 apps, 3 instances each (default), 8 configs per instance
 python3 deploy_batch.py --start 1 --count 50 --output deploy.json
+
+# Scale an app to 10 instances (each runs its own 8 configs)
+python3 deploy_batch.py --start 1 --count 5 --instances 10 --output deploy.json
 ```
 
 ### Collect subscriptions from running nodes
