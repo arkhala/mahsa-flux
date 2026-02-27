@@ -10,9 +10,13 @@ Each Flux Cloud node runs a single Docker container that:
 
 1. Generates **x25519 Reality keys** and a configurable number of client UUIDs
    (default 8, tunable via `NUM_CONFIGS`).
-2. Starts **Xray-core** with VLESS + Reality + xtls-rprx-vision on port 443.
-3. Serves a **base64-encoded subscription file** at `/sub?token=<SECRET>` on
-   port 8080, protected by a per-node secret token.
+2. Starts **Xray-core** with VLESS + Reality + xtls-rprx-vision on an internal
+   port (default 10443, not directly exposed).
+3. Runs a **base64-encoded subscription server** at `/sub?token=<SECRET>` on an
+   internal port (default 10080, not directly exposed).
+4. A **TCP port multiplexer** listens on a single exposed port (default 31443)
+   and routes TLS traffic to Xray and plain HTTP requests to the subscription
+   server.  This keeps the Flux app spec to **one port**, reducing instance cost.
 
 A local batch script (`deploy_batch.py`) templates Flux v8 app specs, and a
 collector script (`collect_mahsa.py`) fetches configs from all nodes in
@@ -25,6 +29,7 @@ parallel for donation to the Mahsa Server pool.
 | `Dockerfile` | Alpine-based image with Xray-core and Flask |
 | `entrypoint.py` | Key generation, config templating, process management |
 | `sub_server.py` | Token-protected Flask subscription endpoint |
+| `port_mux.py` | TCP multiplexer — single-port TLS/HTTP routing |
 | `xray_template.json` | Xray inbound/outbound template |
 | `deploy_batch.py` | Batch Flux app spec generator |
 | `collect_mahsa.py` | Parallel subscription collector |
@@ -59,7 +64,9 @@ python3 collect_mahsa.py --manifest deploy.json --output all_configs.txt
 | `SUB_TOKEN` | auto-generated | Secret token for `/sub` endpoint |
 | `FLUX_APP_NAME` | `node` | Used in VLESS link remarks and hostname |
 | `FLUX_HOST` | auto-derived | Override public hostname/IP |
-| `LISTEN_PORT` | `443` | Xray listen port |
+| `LISTEN_PORT` | `31443` | Single exposed port (multiplexer) |
+| `XRAY_INTERNAL_PORT` | `10443` | Internal Xray listen port (localhost) |
+| `SUB_INTERNAL_PORT` | `10080` | Internal subscription server port (localhost) |
 
 ## Security
 

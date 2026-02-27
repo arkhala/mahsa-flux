@@ -19,7 +19,9 @@ from urllib.parse import quote
 NUM_CONFIGS = int(os.getenv("NUM_CONFIGS", "8"))
 SUB_TOKEN = os.getenv("SUB_TOKEN") or secrets.token_urlsafe(32)
 FLUX_APP_NAME = os.getenv("FLUX_APP_NAME", "node")
-LISTEN_PORT = int(os.getenv("LISTEN_PORT", "443"))
+LISTEN_PORT = int(os.getenv("LISTEN_PORT", "31443"))
+XRAY_INTERNAL_PORT = int(os.getenv("XRAY_INTERNAL_PORT", "10443"))
+SUB_INTERNAL_PORT = int(os.getenv("SUB_INTERNAL_PORT", "10080"))
 
 DECOY_SNIS = [
     "www.microsoft.com",
@@ -85,7 +87,8 @@ def write_xray_config(clients, private_key, short_id):
     with open("/xray_template.json") as f:
         config = json.load(f)
     inbound = config["inbounds"][0]
-    inbound["port"] = LISTEN_PORT
+    inbound["listen"] = "127.0.0.1"
+    inbound["port"] = XRAY_INTERNAL_PORT
     inbound["settings"]["clients"] = clients
     reality = inbound["streamSettings"]["realitySettings"]
     reality["privateKey"] = private_key
@@ -129,16 +132,26 @@ def main():
     write_xray_config(clients, private_key, short_id)
     write_subscription(vless_links)
 
-    # Export token so sub_server.py can read it
+    # Export token and internal port so sub_server.py can read them
     os.environ["SUB_TOKEN"] = SUB_TOKEN
+    os.environ["SUB_INTERNAL_PORT"] = str(SUB_INTERNAL_PORT)
 
     print(f"✅ Generated {NUM_CONFIGS} configs for {host}")
-    print(f"📋 Sub URL: http://{host}:8080/sub?token={SUB_TOKEN}")
+    print(f"📋 Sub URL: http://{host}:{LISTEN_PORT}/sub?token={SUB_TOKEN}")
 
     start_xray()
 
-    # Run Flask sub server in foreground (keeps container alive)
-    subprocess.run([sys.executable, "/sub_server.py"], check=False)
+    # Run Flask sub server on internal port (localhost only)
+    sub_thread = Thread(
+        target=lambda: subprocess.run(
+            [sys.executable, "/sub_server.py"], check=False
+        ),
+        daemon=True,
+    )
+    sub_thread.start()
+
+    # Run port multiplexer in foreground (keeps container alive)
+    subprocess.run([sys.executable, "/port_mux.py"], check=False)
 
 
 if __name__ == "__main__":
