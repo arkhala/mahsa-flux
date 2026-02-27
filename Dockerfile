@@ -7,8 +7,9 @@ RUN apk add --no-cache python3 py3-pip curl unzip && \
 
 COPY entrypoint.py /entrypoint.py
 COPY sub_server.py /sub_server.py
+COPY port_mux.py /port_mux.py
 COPY xray_template.json /xray_template.json
 
-EXPOSE 443 8080
+EXPOSE 31443
 
 CMD ["python3", "/entrypoint.py"]
